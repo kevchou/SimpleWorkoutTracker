@@ -78,7 +78,7 @@ class MainCollectionViewController: UICollectionViewController, UIViewController
 
 
 
-// MARK: DataSource
+// MARK: - DataSource
 extension MainCollectionViewController {
     
     override func numberOfSections(in collectionView: UICollectionView) -> Int {
