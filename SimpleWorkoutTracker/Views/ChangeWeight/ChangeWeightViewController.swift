@@ -25,7 +25,6 @@ class ChangeWeightViewController: UIViewController {
         
         // Get previous workout stats
         previousWorkouts = Array(CoreDataHelper.shared.getPastExercisesFor(exerciseName: name).dropFirst())
-        print(previousWorkouts)
         weightStepper.value = weight
         updateUI()
         

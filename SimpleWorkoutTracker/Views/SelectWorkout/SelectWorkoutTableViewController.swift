@@ -11,14 +11,11 @@ import CoreData
 
 class SelectWorkoutTableViewController: UITableViewController {
     
-    var routines: [Routine] = []
+    var routines: [Routine]!
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        //CoreDataHelper.shared.loadSampleData()
-        routines = CoreDataHelper.shared.getRoutines()
     }
 }
 
@@ -37,16 +34,49 @@ extension SelectWorkoutTableViewController {
         // Get routine that was selected
         let routine = routines[index]
         
+        // Core data stuff
+        let managedContext = CoreDataHelper.shared.managedObjectContext()
+        let workoutEntity = NSEntityDescription.entity(forEntityName: "Workout", in: managedContext)!
+        let exerciseEntity = NSEntityDescription.entity(forEntityName: "Exercise", in: managedContext)!
+        
+        // Create a new workout object
+        let workout = NSManagedObject(entity: workoutEntity, insertInto: managedContext) as! Workout
+        workout.name = routine.name
+        workout.date = Date() // Today's day
+        
+        // add workouts
+        if let exercises = routine.exercises {
+            
+            for exercise in exercises {
+                
+                let newExercise = NSManagedObject(entity: exerciseEntity, insertInto: managedContext) as! Exercise
+                
+                if let mostRecentExercise = CoreDataHelper.shared.getMostRecentExerciseFor(exerciseName: exercise) {
+                    
+                    // Get weight/sets/reps from most recent, if exists
+                    newExercise.name = exercise
+                    newExercise.sets = mostRecentExercise.sets
+                    newExercise.reps = mostRecentExercise.reps
+                    newExercise.weight = mostRecentExercise.weight
+                    
+                } else {
+                    
+                    // Else set default weight/sets/reps
+                    newExercise.name = exercise
+                    newExercise.sets = 5
+                    newExercise.reps = 5
+                    newExercise.weight = 45.0
+                    
+                }
+                workout.addToExercises(newExercise)
+            }
+        }
+        
         // Prepare WorkoutSessionVC
-        dvc.navigationItem.title = routine.name
-        dvc.routineExercises = routine.exercises
+        dvc.workout = workout
+        dvc.sourceVC = "SelectWorkout"
     }
     
-    @IBAction func unwindToSelectWorkout(segue: UIStoryboardSegue) {
-        if segue.identifier == "finishWorkoutSegue" {
-            
-        }
-    }
 }
 
 

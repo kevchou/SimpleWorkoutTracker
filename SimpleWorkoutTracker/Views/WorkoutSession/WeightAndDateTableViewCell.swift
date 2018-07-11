@@ -8,18 +8,14 @@
 
 import UIKit
 
-protocol WeightAndDateCellProtocol {
-    func saveDate(sender: UITableViewCell)
-}
-
 class WeightAndDateTableViewCell: UITableViewCell {
-    
-    var delegate: WeightAndDateCellProtocol?
     
     @IBOutlet weak var weightTextField: UITextField!
     @IBOutlet weak var dateTextField: UITextField!
+    @IBOutlet weak var weightStackView: UIStackView!
     
     var datePicker = UIDatePicker()
+    
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -32,10 +28,17 @@ class WeightAndDateTableViewCell: UITableViewCell {
     }
     
     @IBAction func weightEditDidBegin(_ sender: UITextField) {
+        
         // Add a toolbar with a Done button to the numberpad
         let toolbar = UIToolbar()
-        let done = UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(WeightAndDateTableViewCell.saveWeight))
-        let space = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.flexibleSpace, target: nil, action: nil)
+        let done = UIBarButtonItem(title: "Done",
+                                   style: .plain,
+                                   target: self,
+                                   action: #selector(WeightAndDateTableViewCell.weightEditDone))
+        
+        let space = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.flexibleSpace,
+                                    target: nil,
+                                    action: nil)
         
         toolbar.items = [space, done]
         toolbar.sizeToFit()
@@ -43,10 +46,11 @@ class WeightAndDateTableViewCell: UITableViewCell {
         sender.inputAccessoryView = toolbar
     }
     
-    @objc func saveWeight() {
+    @objc func weightEditDone() {
         weightTextField.resignFirstResponder()
     }
     
+
     
     @IBAction func dateEditDidBegin(_ sender: UITextField) {
         
@@ -54,39 +58,49 @@ class WeightAndDateTableViewCell: UITableViewCell {
         let datePickerView: UIDatePicker = self.datePicker
         datePickerView.datePickerMode = .date
         sender.inputView = datePickerView
-        datePickerView.addTarget(self, action: #selector(WeightAndDateTableViewCell.datePickerValueChanged), for: UIControlEvents.valueChanged)
+        datePickerView.addTarget(self,
+                                 action: #selector(WeightAndDateTableViewCell.datePickerValueChanged),
+                                 for: UIControlEvents.valueChanged)
         
         // add toolbar on top of DatePicker keyboard
         let toolBar = UIToolbar()
         toolBar.sizeToFit()
         
-        let doneButton = UIBarButtonItem(title: "Done", style: UIBarButtonItemStyle.plain, target: self, action: #selector(WeightAndDateTableViewCell.dismissPicker))
-        let spaceButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.flexibleSpace, target: nil, action: nil)
-        let todayButton = UIBarButtonItem(title: "Today", style: UIBarButtonItemStyle.plain, target: self, action: #selector(WeightAndDateTableViewCell.todayDate))
+        let doneButton = UIBarButtonItem(title: "Done",
+                                         style: UIBarButtonItemStyle.plain,
+                                         target: self,
+                                         action: #selector(WeightAndDateTableViewCell.doneDateTextFieldEdit))
+        
+        let spaceButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.flexibleSpace,
+                                          target: nil,
+                                          action: nil)
+        
+        let todayButton = UIBarButtonItem(title: "Today",
+                                          style: UIBarButtonItemStyle.plain,
+                                          target: self,
+                                          action: #selector(WeightAndDateTableViewCell.todayDateButtonTapped))
         
         toolBar.setItems([todayButton, spaceButton, doneButton], animated: false)
         sender.inputAccessoryView = toolBar
     }
     
-    
     @objc
     func datePickerValueChanged(sender: UIDatePicker) {
         updateDateField()
-        delegate?.saveDate(sender: self)
     }
     
-    @objc func dismissPicker() {
+    @objc func doneDateTextFieldEdit() {
         dateTextField.endEditing(true)
     }
     
     func updateDateField() {
+        // sets date text field to current value of datepicker
         let dateFormatter = DateFormatter()
         dateFormatter.dateStyle = .long
-        
         dateTextField.text = dateFormatter.string(from: datePicker.date)
     }
     
-    @objc func todayDate() {
+    @objc func todayDateButtonTapped() {
         datePicker.date = Date()
         updateDateField()
     }

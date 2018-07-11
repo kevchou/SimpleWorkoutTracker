@@ -18,12 +18,12 @@
     <entity name="Workout" representedClassName="Workout" syncable="YES">
         <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
-        <relationship name="exercises" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="Exercise" inverseName="workout" inverseEntity="Exercise" syncable="YES"/>
+        <relationship name="exercises" optional="YES" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="Exercise" inverseName="workout" inverseEntity="Exercise" syncable="YES"/>
     </entity>
     <elements>
+        <element name="BodyWeight" positionX="-407" positionY="-97" width="128" height="73"/>
         <element name="Exercise" positionX="-227" positionY="-3" width="128" height="120"/>
         <element name="Routine" positionX="-227" positionY="-111" width="128" height="75"/>
         <element name="Workout" positionX="-416" positionY="27" width="128" height="88"/>
-        <element name="BodyWeight" positionX="-407" positionY="-97" width="128" height="73"/>
     </elements>
 </model>

@@ -35,6 +35,36 @@ class CoreDataHelper: NSObject {
         return result
     }
     
+    func getPastBodyWeight() -> [BodyWeight] {
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: "BodyWeight")
+        let sort = NSSortDescriptor(key: "date", ascending: false)
+        request.sortDescriptors = [sort]
+        
+        let result: [BodyWeight]
+        do {
+            result = try CoreDataHelper.shared.managedObjectContext().fetch(request) as! [BodyWeight]
+        } catch let error {
+            print(error.localizedDescription)
+            result = []
+        }
+        return result
+    }
+    
+    func getPastWorkouts() -> [Workout] {
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Workout")
+        let sort = NSSortDescriptor(key: "date", ascending: false)
+        request.sortDescriptors = [sort]
+        
+        let result: [Workout]
+        
+        do {
+            result = try CoreDataHelper.shared.managedObjectContext().fetch(request) as! [Workout]
+        } catch let error {
+            print(error.localizedDescription)
+            result = []
+        }
+        return result
+    }
     
     func getPastExercisesFor(exerciseName: String) -> [Exercise] {
         let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Exercise")

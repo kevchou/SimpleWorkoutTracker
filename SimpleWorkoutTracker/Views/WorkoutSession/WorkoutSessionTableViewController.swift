@@ -11,109 +11,89 @@ import CoreData
 
 class WorkoutSessionTableViewController: UITableViewController {
     
+    var bodyweight: BodyWeight?
     var workout: Workout!
-    var routineExercises: [String]? // Passed from SelectWorkoutVC. So we know what routine the user picked
+    var sourceVC: String!
     
     var currentWeightEditIndex: Int = 0 // Used for updating weight for each exercise
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // Core data stuff
-        let managedContext = CoreDataHelper.shared.managedObjectContext()
-        let workoutEntity = NSEntityDescription.entity(forEntityName: "Workout", in: managedContext)!
-        let exerciseEntity = NSEntityDescription.entity(forEntityName: "Exercise", in: managedContext)!
-        
-        // Create a new workout object
-        workout = NSManagedObject(entity: workoutEntity, insertInto: managedContext) as! Workout
-        
-        // set to today's date
-        workout.date = Date()
-        
-
-        // add workouts
-        if let exercises = routineExercises {
+        navigationItem.title = workout.name
+    }
+    
+    @IBAction func cancelButtonTapped(_ sender: UIBarButtonItem) {
+        dismiss(animated: true) {
             
-            for exercise in exercises {
-
-                let newExercise = NSManagedObject(entity: exerciseEntity, insertInto: managedContext) as! Exercise
-                
-                if let mostRecentExercise = CoreDataHelper.shared.getMostRecentExerciseFor(exerciseName: exercise) {
-                    
-                    // Get weight/sets/reps from most recent, if exists
-                    newExercise.name = exercise
-                    newExercise.sets = mostRecentExercise.sets
-                    newExercise.reps = mostRecentExercise.reps
-                    newExercise.weight = mostRecentExercise.weight
-                    
-                } else {
-                    
-                    // Else set default weight/sets/reps
-                    newExercise.name = exercise
-                    newExercise.sets = 5
-                    newExercise.reps = 5
-                    newExercise.weight = 45.0
-                    
-                }
-                workout.addToExercises(newExercise)
+            if self.sourceVC == "SelectWorkout" {
+                CoreDataHelper.shared.managedObjectContext().delete(self.workout)
+            } else if self.sourceVC == "WorkoutHistory" {
+                CoreDataHelper.shared.managedObjectContext().rollback()
             }
         }
     }
     
-    
     @IBAction func finishButtonTapped(_ sender: UIBarButtonItem) {
         dismiss(animated: true) {
+            
+            // Save bodyweight and date
+            let weightCell = self.tableView.cellForRow(at: IndexPath(row: 0, section: 0)) as! WeightAndDateTableViewCell
+            
+            self.workout.date = weightCell.datePicker.date
+            if let bodyweight = Double(weightCell.weightTextField.text!) {
+                self.saveBodyWeight(bodyweight)
+            }
+            
+            // save exercises
+            for (i, exercise) in self.workout.exercises!.enumerated() {
+                
+                if let exercise = exercise as? Exercise {
+                    
+                    let exerciseCell = self.tableView.cellForRow(at: IndexPath(row: 2+i, section:0)) as! WorkoutExerciseTableViewCell
+                    
+                    exercise.weight = Double(exerciseCell.weightButton.titleLabel!.text!)!
+                    exercise.sets = Int16(exerciseCell.setsTextField.text!)!
+                    exercise.reps = Int16(exerciseCell.repsTextField.text!)!
+                }
+            }
+            
             CoreDataHelper.shared.appDelegate().saveContext()
         }
     }
     
+    func saveBodyWeight(_ bodyweight: Double) {
+        let managedContext = CoreDataHelper.shared.managedObjectContext()
+        let bodyweightEntity = NSEntityDescription.entity(forEntityName: "BodyWeight",
+                                                          in: managedContext)!
+        let bw = NSManagedObject(entity: bodyweightEntity,
+                                 insertInto: managedContext) as! BodyWeight
+        bw.bodyweight = bodyweight
+        bw.date = self.workout.date
+    }
     
 }
 
 
-// MARK: Navigation
 
+
+// MARK:- Protocols
+
+// MARK: Workout Exercise TableViewCell
 // what to do when the weight button in each cell is tapped. Segue to change weight.
-extension WorkoutSessionTableViewController: WorkoutSessionProtocol {
+extension WorkoutSessionTableViewController: WorkoutExerciseTableViewCellDelegate {
     
     func segueToChangeWeightView(sender: UITableViewCell) {
         performSegue(withIdentifier: "ChangeWeightSegue", sender: sender)
     }
     
-    func saveSetsAndReps(sender: UITableViewCell) {
-        let indexPath = tableView.indexPath(for: sender)!
-        let exercise = workout.exercises![indexPath.row - 2] as! Exercise
-        print(exercise)
-        
-        let workoutCell = sender as! WorkoutExerciseTableViewCell
-        
-        if let setsText = workoutCell.setsTextField.text {
-            exercise.sets = Int16(setsText)!
-        }
-        
-        if let repsText = workoutCell.repsTextField.text {
-            exercise.reps = Int16(repsText)!
-        }
-        
-    }
 }
 
-extension WorkoutSessionTableViewController: WeightAndDateCellProtocol {
-    
-    func saveDate(sender: UITableViewCell) {
-        let weightAndDateCell = sender as! WeightAndDateTableViewCell
-        workout.date = weightAndDateCell.datePicker.date
-    }
-}
-
-
-
-
+// MARK:- Navigation
 extension WorkoutSessionTableViewController {
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         
-        // segue to changeweightVC
+        /*** segue to changeweightVC ***/
         guard
             let dvc = segue.destination as? ChangeWeightViewController,
             let indexPath = tableView.indexPath(for: sender as! UITableViewCell)
@@ -126,16 +106,19 @@ extension WorkoutSessionTableViewController {
         let exercise = workout.exercises![currentWeightEditIndex] as! Exercise
         dvc.name = exercise.name
         dvc.weight = exercise.weight
+        
     }
     
     @IBAction func unwindToWorkoutSession(segue: UIStoryboardSegue) {
         
         if segue.identifier == "SaveWeightSegue" {
+            
             // Change current weight to newly inputted value
             let svc = segue.source as! ChangeWeightViewController
             (workout.exercises![currentWeightEditIndex] as! Exercise).weight = svc.weight
             tableView.reloadData()
         }
+        
     }
 }
 
@@ -160,6 +143,12 @@ extension WorkoutSessionTableViewController {
             cell.weightTextField.text = ""
             cell.datePicker.date = workout.date!
             cell.dateTextField.text = workout.date!.longString
+            
+            if self.sourceVC == "SelectWorkout" {
+                cell.weightStackView.isHidden = false
+            } else if self.sourceVC == "WorkoutHistory" {
+                cell.weightStackView.isHidden = true
+            }
             
             return cell
             

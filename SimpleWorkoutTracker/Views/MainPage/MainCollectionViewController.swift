@@ -14,21 +14,26 @@ class MainCollectionViewController: UICollectionViewController, UIViewController
 
     override func viewDidLoad() {
         super.viewDidLoad()
+         //CoreDataHelper.shared.loadSampleData()
     }
 
-    /*
+    
     // MARK: - Navigation
 
     // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using [segue destinationViewController].
-        // Pass the selected object to the new view controller.
+        
+        
+        if segue.identifier == "WorkoutHistorySegue" {
+            let dvc = segue.destination as! WorkoutHistoryTableViewController
+            dvc.workouts = CoreDataHelper.shared.getPastWorkouts()
+        } else if segue.identifier == "NewWorkoutSegue" {
+            let dvc = segue.destination as! SelectWorkoutTableViewController
+            dvc.routines = CoreDataHelper.shared.getRoutines()
+        }
+        
+        
     }
-    */
-
-    
-    
-    
 
     // MARK: UICollectionViewDelegate
 
@@ -61,12 +66,10 @@ class MainCollectionViewController: UICollectionViewController, UIViewController
         switch(indexPath.row) {
         case 0:
             performSegue(withIdentifier: "NewWorkoutSegue", sender: self)
-            
         case 1:
-            let pvc = UIViewController()
-            pvc.modalPresentationStyle = UIModalPresentationStyle.overCurrentContext
-            self.present(pvc, animated: true, completion: nil)
-            
+            performSegue(withIdentifier: "BodyWeightHistorySegue", sender: self)
+        case 2:
+            performSegue(withIdentifier: "WorkoutHistorySegue", sender: self)
         default:
             return
         }
@@ -86,7 +89,7 @@ extension MainCollectionViewController {
     }
     
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 2
+        return 3
     }
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -94,9 +97,18 @@ extension MainCollectionViewController {
         
         // Configure the cell
         cell.backgroundColor = UIColor(red: 0.9, green: 0.9, blue: 0.9, alpha: 1)
-        if indexPath.row == 0 {
+        
+        switch(indexPath.row) {
+        case 0:
             cell.textLabel.text = "New Workout"
+        case 1:
+            cell.textLabel.text = "Body Weight"
+        case 2:
+            cell.textLabel.text = "Workout History"
+        default:
+            break
         }
+        
         
         return cell
     }

@@ -8,14 +8,13 @@
 
 import UIKit
 
-protocol WorkoutSessionProtocol {
+protocol WorkoutExerciseTableViewCellDelegate {
     func segueToChangeWeightView(sender: UITableViewCell)
-    func saveSetsAndReps(sender: UITableViewCell)
 }
 
 class WorkoutExerciseTableViewCell: UITableViewCell {
     
-    var delegate: WorkoutSessionProtocol?
+    var delegate: WorkoutExerciseTableViewCellDelegate?
     
     @IBOutlet weak var exerciseLabel: UILabel!
     @IBOutlet weak var weightButton: UIButton!
@@ -47,9 +46,6 @@ class WorkoutExerciseTableViewCell: UITableViewCell {
         sender.inputAccessoryView = toolbar
     }
     
-    @IBAction func editingDidEnd(_ sender: UITextField) {
-        delegate?.saveSetsAndReps(sender: self)
-    }
     
     @objc func doneButtonTapped() {
         setsTextField.resignFirstResponder()
